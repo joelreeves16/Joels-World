@@ -27,10 +27,10 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 export const scene = new THREE.Scene();
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); // Brighter ambient floor for softer/lighter shadows
+const ambientLight = new THREE.AmbientLight(0xffffff, 2.0); // Brighter ambient floor for softer/lighter shadows
 scene.add(ambientLight);
 
-const dirLight = new THREE.SpotLight(0xffffff, 1.4); // Commensurately lowered direct lighting
+const dirLight = new THREE.SpotLight(0xffffff, 1.7); // Commensurately lowered direct lighting
 dirLight.position.set(500, -500, 1500); // Angled down from top-front
 dirLight.angle = Math.PI / 4;
 dirLight.penumbra = 0.1;
@@ -45,7 +45,13 @@ scene.add(dirLight);
 scene.add(dirLight.target); // Expose the light target to the engine scene graph for dynamic viewport tracking
 
 
-export const threeCamera = new THREE.OrthographicCamera(-1, 1, -1, 1, -5000, 5000);
+const initialW = window.innerWidth / 2;
+const initialH = window.innerHeight / 2;
+export let threeCamera = new THREE.OrthographicCamera(-initialW, initialW, initialH, -initialH, -2000, 2000);
+
+export function setThreeCamera(newCamera) {
+  threeCamera = newCamera;
+}
 
 // We invert the Y frustum to match HTML5 Canvas standard coordinates (Y-down)
 threeCamera.up.set(0, -1, 0);
@@ -54,8 +60,13 @@ export const camera = {
   y: 0,
   zoom: 1,
   springX: 0,
-  springY: 0
+  springY: 0,
+  pitch: 0,
+  yaw: 0,
+  setPitch: function (val) { this.pitch = Math.max(0, Math.min(Math.PI / 2.1, this.pitch + val)); },
+  setYaw: function (val) { this.yaw += val; }
 };
+window.camera = camera;
 
 export function screenToWorld(mouseX, mouseY, canvasWidth, canvasHeight) {
   const ndcX = (mouseX / canvasWidth) * 2 - 1;
@@ -129,10 +140,14 @@ function resizeCanvas() {
 
     const aspectOffsetW = viewportWidth / 2;
     const aspectOffsetH = viewportHeight / 2;
-    threeCamera.left = -aspectOffsetW;
-    threeCamera.right = aspectOffsetW;
-    threeCamera.top = aspectOffsetH;   // HTML5 is Y-Down, so frustum must flip mapping
-    threeCamera.bottom = -aspectOffsetH;
+    if (threeCamera.isOrthographicCamera) {
+      threeCamera.left = -aspectOffsetW;
+      threeCamera.right = aspectOffsetW;
+      threeCamera.top = aspectOffsetH;   // HTML5 is Y-Down, so frustum must flip mapping
+      threeCamera.bottom = -aspectOffsetH;
+    } else {
+      threeCamera.aspect = viewportWidth / viewportHeight;
+    }
     threeCamera.updateProjectionMatrix();
   }
 }
@@ -216,10 +231,7 @@ let lastSyncTime = 0;
 let activeNpc = [];
 export let activeMinigameModule = null;
 
-window.adminCameraConfig = {
-  setPitch: (val) => { camera.pitch = Math.max(0, Math.min(Math.PI / 2.1, (camera.pitch || 0) + val)); },
-  setYaw: (val) => { camera.yaw = (camera.yaw || 0) + val; }
-};
+
 
 export const footprints = [];
 
@@ -536,7 +548,12 @@ function draw() {
   // Determine dynamic spherical camera positioning using Pitch and Yaw
   const pitch = Math.max(0.001, camera.pitch || 0.001); // Prevent top-down Gimbal Lock collision
   const yaw = camera.yaw || 0;     // Rotation around Z axis
-  const orbDistance = 500;
+
+  // Calculate orb distance to roughly match viewport scale if perspective
+  let orbDistance = 500;
+  if (threeCamera.isPerspectiveCamera) {
+    orbDistance = (viewportHeight || window.innerHeight) / (2 * Math.tan((threeCamera.fov / 2) * Math.PI / 180));
+  }
 
   // Real world coordinates of the focus target (The player)
   const targetX = camera.x - xOffset;

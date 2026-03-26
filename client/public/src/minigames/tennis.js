@@ -660,10 +660,16 @@ export function initMinigame() {
   }
 
   const minigameUi = document.getElementById('minigame-ui-container');
-  if (minigameUi) minigameUi.style.display = 'block';
-
-  const scoreboard = document.getElementById('tennis-scoreboard');
-  if (scoreboard) scoreboard.style.display = 'flex';
+  if (minigameUi) {
+    minigameUi.innerHTML = `
+      <div id="tennis-scoreboard" class="glass-panel"
+        style="display: flex; position: absolute; top: max(20px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 12px; z-index: 50; flex-direction: row; align-items: center; justify-content: center;">
+        <div style="font-family: 'Pricedown', sans-serif; font-size: 22px; color: #f1c40f; line-height: 1.2; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); border-right: 2px solid rgba(255,255,255,0.3); padding-right: 15px; margin-right: 15px;" id="tennis-score-npc">NPC: Love</div>
+        <div style="font-family: 'Pricedown', sans-serif; font-size: 22px; color: #2ecc71; line-height: 1.2; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);" id="tennis-score-player">YOU: Love</div>
+      </div>
+    `;
+    minigameUi.style.display = 'block';
+  }
   updateScoreboardDOM();
 
   const joystickContainer = document.getElementById('joystick-move-container');
@@ -692,6 +698,12 @@ export function initMinigame() {
 function cleanupMinigame() {
   minigameActive = false;
   gameLoop.unregisterFunction(run);
+  
+  const minigameUi = document.getElementById('minigame-ui-container');
+  if (minigameUi) {
+    minigameUi.innerHTML = '';
+    minigameUi.style.display = 'none';
+  }
 }
 
 /**

@@ -1,14 +1,11 @@
 import { gameLoop } from '../gameloop.js';
 import { inputManager } from '../input.js';
-import { characterManager } from '../characters.js';
+import { characterManager, getCharacterProxy } from '../characters.js';
 import { physicsEngine } from '../physics.js';
-import { camera, player, scene, threeCamera, renderer } from '../main.js';
+import { camera, player, scene, threeCamera, renderer, setThreeCamera } from '../main.js';
 import { mapManager } from '../maps.js';
 import { soundManager } from '../sound.js';
 import * as THREE from 'three';
-
-const canvas = document.getElementById('uiCanvas');
-const ctx = canvas.getContext('2d');
 
 let minigameActive = false;
 
@@ -118,11 +115,22 @@ export function initMinigame() {
   // Natively block out WebGL void using the playground grass color
   scene.background = new THREE.Color('#7bed9f');
 
+  // Set up the Scoreboard UI natively driven by internal DOM state mappings
   const minigameUi = document.getElementById('minigame-ui-container');
-  if (minigameUi) minigameUi.style.display = 'block';
-
-  const tagScoreboard = document.getElementById('tag-scoreboard');
-  if (tagScoreboard) tagScoreboard.style.display = 'block';
+  if (minigameUi) {
+    minigameUi.innerHTML = `
+      <div id="tag-scoreboard" class="glass-panel"
+        style="display: flex; flex-direction: column; position: absolute; top: max(20px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 12px; z-index: 50; text-align: center;">
+        <div style="font-family: 'Pricedown', sans-serif; font-size: 22px; color: #f1c40f; line-height: 1.2; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);" id="tag-round">Round: 1</div>
+        <div style="font-family: 'Pricedown', sans-serif; font-size: 22px; color: #2ecc71; line-height: 1.2; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-top: 5px;" id="tag-time">Time: 60s</div>
+        <div id="tag-it-warning" style="display: none; font-family: 'Pricedown', sans-serif; font-size: 28px; color: #e74c3c; line-height: 1.2; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-top: 10px;">YOU ARE IT!</div>
+      </div>
+      <div id="tag-it-marker"
+        style="display: none; position: absolute; color: #e74c3c; font-family: 'Pricedown', sans-serif; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 45; transform: translate(-50%, -50%); pointer-events: none;">
+        IT</div>
+    `;
+    minigameUi.style.display = 'block';
+  }
 
   initPlayers();
 
@@ -314,6 +322,8 @@ function convergePhysics(charState, dt) {
   const moveLen = Math.sqrt(dx * dx + dy * dy);
   if (moveLen > 0.1) {
     charState.legTimer += 15 * dt;
+  } else {
+    charState.legTimer = 0;
   }
 }
 
@@ -429,33 +439,39 @@ function run(dt) {
 }
 
 function draw(dt) {
-  const dpr = window.devicePixelRatio || 1;
-  const ui = document.getElementById('uiCanvas');
-  if (ui && (ui.width !== window.innerWidth * dpr)) {
-    ui.width = window.innerWidth * dpr;
-    ui.height = window.innerHeight * dpr;
-    ui.style.width = window.innerWidth + 'px';
-    ui.style.height = window.innerHeight + 'px';
-  }
-  const viewportWidth = canvas.clientWidth;
-  const viewportHeight = canvas.clientHeight;
-
-  // Erase the UI natively granting a transparent window piercing directly down into the hardware GameCanvas layer
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
 
   // Set THREE.js orthographic bounds matching the 2D scaling dynamically
-  const camZoom = camera.zoom || 1;
-  const aspectW = (viewportWidth / camZoom) / 2;
-  const aspectH = (viewportHeight / camZoom) / 2;
+  const aspectW = viewportWidth / 2;
+  const aspectH = viewportHeight / 2;
 
-  const pitchCos = Math.max(0.15, Math.cos(threeCamera.rotation.x));
-  threeCamera.left = -aspectW;
-  threeCamera.right = aspectW;
-  // Account for pitch stretching the vertical height dynamically
-  threeCamera.top = aspectH / pitchCos;
-  threeCamera.bottom = -aspectH / pitchCos;
+  const pitch = camera.pitch + 0.60;
+  const yaw = camera.yaw || 0;
+  let orbDistance = 1000;
+  if (threeCamera.isPerspectiveCamera) {
+    orbDistance = viewportHeight / (2 * Math.tan((threeCamera.fov / 2) * Math.PI / 180));
+  }
 
-  threeCamera.position.set(camera.x, -camera.y, 1000);
+  const targetX = camera.x;
+  const targetY = -camera.y;
+
+  // Setup the Perspective/Tilted game camera exclusively for 3D character rendering
+  threeCamera.position.x = targetX + Math.sin(yaw) * Math.sin(pitch) * orbDistance;
+  threeCamera.position.y = targetY - Math.cos(yaw) * Math.sin(pitch) * orbDistance;
+  threeCamera.position.z = Math.cos(pitch) * orbDistance;
+  threeCamera.up.set(0, 0, 1);
+  threeCamera.lookAt(targetX, targetY, 0);
+
+  if (threeCamera.isOrthographicCamera) {
+    const pitchCos = Math.max(0.15, Math.cos(pitch));
+    threeCamera.left = -aspectW;
+    threeCamera.right = aspectW;
+    threeCamera.top = aspectH * pitchCos;
+    threeCamera.bottom = -aspectH * pitchCos;
+  } else {
+    threeCamera.aspect = viewportWidth / viewportHeight;
+  }
   threeCamera.zoom = camera.zoom;
   threeCamera.updateProjectionMatrix();
 
@@ -463,7 +479,7 @@ function draw(dt) {
 
   let drawnBaseChars = false;
 
-  // Draw mapped Z layers from the native JSON loader mapping 3D arrays seamlessly!
+  // Process game state matrices cleanly 
   mapManager.layers.forEach((layerGroup, z) => {
     if (!layerGroup) return;
 
@@ -472,8 +488,10 @@ function draw(dt) {
       for (const p of sortedPlayers) {
         p.x = p.currentPosition.x;
         p.y = p.currentPosition.y;
-        p.legAnimationTime = p.legTimer;
         p.rotation = p.currentPosition.rotation;
+
+        getCharacterProxy(p.id).legAnimationTime = p.legTimer;
+
         characterManager.drawCharacter(p, !p.isLocalPlayer, 'base', scene, player, null, camera.zoom, viewportWidth, viewportHeight, threeCamera);
       }
       drawnBaseChars = true;
@@ -487,8 +505,10 @@ function draw(dt) {
     for (const p of sortedPlayers) {
       p.x = p.currentPosition.x;
       p.y = p.currentPosition.y;
-      p.legAnimationTime = p.legTimer;
       p.rotation = p.currentPosition.rotation;
+
+      getCharacterProxy(p.id).legAnimationTime = p.legTimer;
+
       characterManager.drawCharacter(p, !p.isLocalPlayer, 'base', scene, player, null, camera.zoom, viewportWidth, viewportHeight, threeCamera);
     }
   }
@@ -525,16 +545,15 @@ function draw(dt) {
 export function cleanupMinigame() {
   minigameActive = false;
   soundManager.stopBackground();
-  const ui = document.getElementById('uiCanvas');
-  if (ui) { const x = ui.getContext('2d'); x.clearRect(0, 0, ui.width, ui.height); }
 
   // Restoring global canvas conditions perfectly upon map transfer natively ensuring seamless handoffs
   scene.background = null;
 
-  const tagScoreboard = document.getElementById('tag-scoreboard');
-  if (tagScoreboard) tagScoreboard.style.display = 'none';
-  const tagMarker = document.getElementById('tag-it-marker');
-  if (tagMarker) tagMarker.style.display = 'none';
+  const minigameUi = document.getElementById('minigame-ui-container');
+  if (minigameUi) {
+    minigameUi.innerHTML = '';
+    minigameUi.style.display = 'none';
+  }
 
   const mapBtn = document.getElementById('map-button');
   const exitBtn = document.getElementById('exit-button');
