@@ -12,6 +12,18 @@ import { gameLoop } from './gameloop.js';
 
 import * as THREE from 'three';
 
+physicsEngine.onClipMaskLoaded = (canvas) => {
+    if (physicsEngine.clipMaskTexture) physicsEngine.clipMaskTexture.dispose();
+    if (!canvas) {
+        physicsEngine.clipMaskTexture = null;
+        return;
+    }
+    physicsEngine.clipMaskTexture = new THREE.CanvasTexture(canvas);
+    physicsEngine.clipMaskTexture.minFilter = THREE.NearestFilter;
+    physicsEngine.clipMaskTexture.magFilter = THREE.NearestFilter;
+    physicsEngine.clipMaskTexture.generateMipmaps = false;
+    physicsEngine.clipMaskTexture.flipY = false;
+};
 // Trigger native GLTF parsing routines immediately on script load!
 loadSharedModels();
 

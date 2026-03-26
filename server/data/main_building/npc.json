@@ -19,7 +19,7 @@
           "If you're not offering me pasta or a heated blanket, keep walking.",
           "This school feels like an escape room, but nobody gave me the clues.",
           "Forward. Only forward. Always forward!",
-          "I\u2019m operating on three hours of sleep and pure sarcasm."
+          "I’m operating on three hours of sleep and pure sarcasm."
         ]
       }
     ],
@@ -35,7 +35,8 @@
     "shirt_color": "#e74c3c",
     "pants_color": "#2c3e50",
     "arm_color": "#e74c3c",
-    "shoe_color": "#7f8c8d"
+    "shoe_color": "#7f8c8d",
+    "z": 0
   },
   {
     "id": 2,
@@ -63,7 +64,8 @@
     "shirt_color": "#ff69b4",
     "pants_color": "#3498db",
     "arm_color": "#ff69b4",
-    "shoe_color": "#111111"
+    "shoe_color": "#111111",
+    "z": 0
   },
   {
     "id": 3,
@@ -75,7 +77,7 @@
     "rotation": 0,
     "gender": "male",
     "interaction_radius": 150,
-    "emoji": "\ud83d\udca9",
+    "emoji": "💩",
     "on_enter": [
       {
         "avatar": "avatars/talking_poo.png",
@@ -106,13 +108,14 @@
     "shirt_color": "#5C4033",
     "pants_color": "#5C4033",
     "arm_color": "#5C4033",
-    "shoe_color": "#111111"
+    "shoe_color": "#111111",
+    "z": 0
   },
   {
     "id": 4,
     "name": "Tom",
-    "x": 1163,
-    "y": -532,
+    "x": 1149,
+    "y": -529,
     "width": 35,
     "height": 35,
     "rotation": 0,
@@ -134,18 +137,23 @@
       }
     ],
     "on_exit": [],
+    "default_emote": {
+      "name": "sit",
+      "startTime": 0
+    },
     "head": "male_hair_bald",
     "hair_color": "#000000",
     "shirt_color": "#3498db",
     "pants_color": "#2c3e50",
     "arm_color": "#3498db",
-    "shoe_color": "#111111"
+    "shoe_color": "#111111",
+    "z": 0
   },
   {
     "id": 5,
     "name": "Jessica",
-    "x": 1308,
-    "y": -497,
+    "x": 1315,
+    "y": -499,
     "width": 35,
     "height": 35,
     "rotation": 180,
@@ -167,12 +175,17 @@
       }
     ],
     "on_exit": [],
+    "default_emote": {
+      "name": "sit",
+      "startTime": 0
+    },
     "head": "female_hair_messy",
     "hair_color": "#000000",
     "shirt_color": "#8e44ad",
     "pants_color": "#34495e",
     "arm_color": "#8e44ad",
-    "shoe_color": "#7f8c8d"
+    "shoe_color": "#7f8c8d",
+    "z": 0
   },
   {
     "id": 6,
@@ -207,13 +220,14 @@
     "shirt_color": "#e67e22",
     "pants_color": "#2c3e50",
     "arm_color": "#e67e22",
-    "shoe_color": "#bdc3c7"
+    "shoe_color": "#bdc3c7",
+    "z": 0
   },
   {
     "id": 7,
     "name": "Oliver D",
-    "x": 838,
-    "y": -503,
+    "x": 826,
+    "y": -502,
     "width": 40,
     "height": 40,
     "rotation": 0,
@@ -226,11 +240,16 @@
       }
     ],
     "on_exit": [],
+    "default_emote": {
+      "name": "sit",
+      "startTime": 0
+    },
     "head": "male_hair_bald",
     "hair_color": "#000000",
     "shirt_color": "#0433ff",
     "pants_color": "#2c3e50",
-    "arm_color": "#61177c"
+    "arm_color": "#61177c",
+    "z": 0
   },
   {
     "id": 8,
@@ -253,7 +272,8 @@
     "hair_color": "#000000",
     "shirt_color": "#3498db",
     "pants_color": "#2c3e50",
-    "arm_color": "#3498db"
+    "arm_color": "#3498db",
+    "z": 0
   },
   {
     "id": 9,
@@ -282,6 +302,7 @@
     "hair_color": "#a77b00",
     "shirt_color": "#263e0f",
     "pants_color": "#232323",
-    "arm_color": "#4f5503"
+    "arm_color": "#4f5503",
+    "z": 0
   }
 ]

@@ -397,7 +397,7 @@ export function injectClipMask(material, charId) {
                
                if (clipUv.x >= 0.0 && clipUv.x <= 1.0 && clipUv.y >= 0.0 && clipUv.y <= 1.0) {
                    vec4 clipColor = texture2D(clipMap, clipUv);
-                   if (clipColor.r < 0.5 && clipColor.g < 0.5) {
+                   if (clipColor.r < 0.1 && clipColor.g < 0.1 && clipColor.b < 0.1) {
                        occluded = true;
                        break;
                    }

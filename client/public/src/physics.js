@@ -1,5 +1,3 @@
-import * as THREE from 'three';
-
 export class PhysicsEngine {
   constructor() {
     this.clipMaskCanvas = null;
@@ -149,8 +147,7 @@ export class PhysicsEngine {
   loadClipMask(url, mapW, mapH) {
     if (!url) {
       this.clipMaskCanvas = null;
-      if (this.clipMaskTexture) this.clipMaskTexture.dispose();
-      this.clipMaskTexture = null;
+      if (this.onClipMaskLoaded) this.onClipMaskLoaded(null);
       this.clipMaskCtx = null;
       this.clipMaskImageData = null;
       return;
@@ -181,15 +178,10 @@ export class PhysicsEngine {
     img.onload = () => {
       ctx.drawImage(img, 0, 0, this.clipMaskWidth, this.clipMaskHeight);
       this.clipMaskCanvas = canvas;
-      
-      if (this.clipMaskTexture) this.clipMaskTexture.dispose();
-      this.clipMaskTexture = new THREE.CanvasTexture(canvas);
-      this.clipMaskTexture.minFilter = THREE.NearestFilter;
-      this.clipMaskTexture.magFilter = THREE.NearestFilter;
-      this.clipMaskTexture.generateMipmaps = false;
-      this.clipMaskTexture.flipY = false;
-
       this.clipMaskCtx = ctx;
+
+      if (this.onClipMaskLoaded) this.onClipMaskLoaded(canvas);
+
       try {
         const imgData = ctx.getImageData(0, 0, this.clipMaskWidth, this.clipMaskHeight);
         // Cast the Uint8ClampedArray byte buffer natively into a 32-bit integer array.
