@@ -123,8 +123,8 @@
   {
     "id": 48,
     "shape": "rect",
-    "x": 1362,
-    "y": -901,
+    "x": 1455,
+    "y": -803,
     "name": "Main School Building",
     "rotation": -3,
     "width": 340,
@@ -175,5 +175,140 @@
     "model": "models/junior_school_trees.glb",
     "scale": 1,
     "name": "Trees"
+  },
+  {
+    "id": 52,
+    "shape": "3d_model",
+    "x": 1067,
+    "y": -913,
+    "width": 100,
+    "length": 100,
+    "z": 0,
+    "model": "models/stylized_bush.glb",
+    "scale": 50
+  },
+  {
+    "id": 53,
+    "shape": "3d_model",
+    "x": 1149,
+    "y": -916,
+    "width": 100,
+    "length": 100,
+    "z": 0,
+    "model": "models/stylized_bush.glb",
+    "scale": 50
+  },
+  {
+    "id": 54,
+    "shape": "3d_model",
+    "x": 1591,
+    "y": -931,
+    "width": 100,
+    "length": 100,
+    "z": 0,
+    "model": "models/stylized_bush.glb",
+    "scale": 50
+  },
+  {
+    "id": 55,
+    "shape": "3d_model",
+    "x": 1663,
+    "y": -935,
+    "width": 100,
+    "length": 100,
+    "z": 0,
+    "model": "models/stylized_bush.glb",
+    "scale": 50
+  },
+  {
+    "id": 60,
+    "shape": "3d_model",
+    "x": 1491,
+    "y": -938,
+    "width": 33,
+    "length": 36,
+    "z": 0,
+    "model": "models/saintpaulia_flowers_low-poly.glb",
+    "scale": 100
+  },
+  {
+    "id": 61,
+    "shape": "3d_model",
+    "x": 1455,
+    "y": -937,
+    "width": 33,
+    "length": 36,
+    "z": 0,
+    "model": "models/saintpaulia_flowers_low-poly.glb",
+    "scale": 100
+  },
+  {
+    "id": 62,
+    "shape": "3d_model",
+    "x": 1418,
+    "y": -934,
+    "width": 33,
+    "length": 36,
+    "z": 0,
+    "model": "models/saintpaulia_flowers_low-poly.glb",
+    "scale": 100
+  },
+  {
+    "id": 63,
+    "shape": "3d_model",
+    "x": 1314,
+    "y": -925,
+    "width": 33,
+    "length": 36,
+    "z": 0,
+    "model": "models/saintpaulia_flowers_low-poly.glb",
+    "scale": 100
+  },
+  {
+    "id": 64,
+    "shape": "3d_model",
+    "x": 1278,
+    "y": -925,
+    "width": 33,
+    "length": 36,
+    "z": 0,
+    "model": "models/saintpaulia_flowers_low-poly.glb",
+    "scale": 100
+  },
+  {
+    "id": 65,
+    "shape": "3d_model",
+    "x": 1241,
+    "y": -924,
+    "width": 33,
+    "length": 36,
+    "z": 0,
+    "model": "models/saintpaulia_flowers_low-poly.glb",
+    "scale": 100
+  },
+  {
+    "id": 66,
+    "shape": "3d_model",
+    "x": 1203,
+    "y": -922,
+    "width": 33,
+    "length": 36,
+    "z": 0,
+    "model": "models/saintpaulia_flowers_low-poly.glb",
+    "scale": 100
+  },
+  {
+    "id": 67,
+    "shape": "3d_model",
+    "x": 852,
+    "y": -424,
+    "width": 70,
+    "length": 68,
+    "z": 1,
+    "model": "models/low_poly_kids_playground.glb",
+    "scale": 25,
+    "name": "Playground",
+    "clip": -1,
+    "rotation": -4
   }
 ]

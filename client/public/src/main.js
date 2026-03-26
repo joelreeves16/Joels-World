@@ -11,18 +11,22 @@ import { uiManager } from './ui.js';
 import { gameLoop } from './gameloop.js';
 
 import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 physicsEngine.onClipMaskLoaded = (canvas) => {
-    if (physicsEngine.clipMaskTexture) physicsEngine.clipMaskTexture.dispose();
-    if (!canvas) {
-        physicsEngine.clipMaskTexture = null;
-        return;
-    }
-    physicsEngine.clipMaskTexture = new THREE.CanvasTexture(canvas);
-    physicsEngine.clipMaskTexture.minFilter = THREE.NearestFilter;
-    physicsEngine.clipMaskTexture.magFilter = THREE.NearestFilter;
-    physicsEngine.clipMaskTexture.generateMipmaps = false;
-    physicsEngine.clipMaskTexture.flipY = false;
+  if (physicsEngine.clipMaskTexture) physicsEngine.clipMaskTexture.dispose();
+  if (!canvas) {
+    physicsEngine.clipMaskTexture = null;
+    return;
+  }
+  physicsEngine.clipMaskTexture = new THREE.CanvasTexture(canvas);
+  physicsEngine.clipMaskTexture.minFilter = THREE.NearestFilter;
+  physicsEngine.clipMaskTexture.magFilter = THREE.NearestFilter;
+  physicsEngine.clipMaskTexture.generateMipmaps = false;
+  physicsEngine.clipMaskTexture.flipY = false;
 };
 // Trigger native GLTF parsing routines immediately on script load!
 loadSharedModels();
@@ -42,7 +46,7 @@ export const scene = new THREE.Scene();
 const ambientLight = new THREE.AmbientLight(0xffffff, 2.0); // Brighter ambient floor for softer/lighter shadows
 scene.add(ambientLight);
 
-const dirLight = new THREE.SpotLight(0xffffff, 1.7); // Commensurately lowered direct lighting
+const dirLight = new THREE.SpotLight(0xffffff, 2.0); // Commensurately lowered direct lighting
 dirLight.position.set(500, -500, 1500); // Angled down from top-front
 dirLight.angle = Math.PI / 4;
 dirLight.penumbra = 0.1;
@@ -51,7 +55,7 @@ dirLight.decay = 0; // Disable inverse-square physical falloff guaranteeing unif
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 1024;
 dirLight.shadow.mapSize.height = 1024;
-dirLight.shadow.camera.near = 500;
+dirLight.shadow.camera.near = 1000;
 dirLight.shadow.camera.far = 4000;
 scene.add(dirLight);
 scene.add(dirLight.target); // Expose the light target to the engine scene graph for dynamic viewport tracking
@@ -59,10 +63,28 @@ scene.add(dirLight.target); // Expose the light target to the engine scene graph
 
 const initialW = window.innerWidth / 2;
 const initialH = window.innerHeight / 2;
-export let threeCamera = new THREE.OrthographicCamera(-initialW, initialW, initialH, -initialH, -2000, 2000);
+// Switch to PerspectiveCamera to fix SSAO depth precision limitations
+export let threeCamera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 2000);
+
+export let composer = new EffectComposer(renderer);
+export const renderPass = new RenderPass(scene, threeCamera);
+composer.addPass(renderPass);
+
+export const ssaoPass = new SSAOPass(scene, threeCamera, window.innerWidth, window.innerHeight);
+ssaoPass.kernelRadius = 32;      // Massive sample radius to cast deep shadows
+ssaoPass.minDistance = 0.000001;    // Catch tiny crevices
+ssaoPass.maxDistance = 1.5;       // Stop shadows from aggressively cutting off when buildings get too tall!
+//ssaoPass.width = 4048;
+//ssaoPass.output = SSAOPass.OUTPUT.SSAO; // Disabled debug mode
+composer.addPass(ssaoPass);
+
+const outputPass = new OutputPass();
+composer.addPass(outputPass);
 
 export function setThreeCamera(newCamera) {
   threeCamera = newCamera;
+  renderPass.camera = newCamera;
+  ssaoPass.camera = newCamera;
 }
 
 // We invert the Y frustum to match HTML5 Canvas standard coordinates (Y-down)
@@ -149,6 +171,13 @@ function resizeCanvas() {
     viewportHeight = renderHeight;
     renderer.setSize(viewportWidth, viewportHeight, true);
     renderer.setPixelRatio(dpr);
+    if (composer) {
+      composer.setPixelRatio(dpr);
+      composer.setSize(viewportWidth, viewportHeight);
+    }
+    if (typeof ssaoPass !== 'undefined' && ssaoPass) {
+      ssaoPass.setSize(viewportWidth, viewportHeight);
+    }
 
     const aspectOffsetW = viewportWidth / 2;
     const aspectOffsetH = viewportHeight / 2;
@@ -613,7 +642,7 @@ function draw() {
     characterManager.drawCharacters('all', scene, player, () => networkClient.syncPlayerToJSON(), camera.zoom, viewportWidth, viewportHeight, threeCamera);
   }
 
-  renderer.render(scene, threeCamera);
+  composer.render();
 }
 
 

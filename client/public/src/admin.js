@@ -1,8 +1,9 @@
 import { getCharacterProxy, clearCharacterProxy, MALE_HEADS, FEMALE_HEADS, HAIR_COLORS, HAIR_COLOR_MAP } from './characters.js';
 import { getObjectProxy, clearObjectProxy } from './maps.js';
 import { gameLoop } from './gameloop.js';
-import { player, camera, screenToWorld, getScreenTransformMatrix } from './main.js';
+import { player, camera, threeCamera, screenToWorld, getScreenTransformMatrix } from './main.js';
 import { networkClient } from './network.js';
+import * as THREE from 'three';
 
 networkClient.isAdmin = true;
 
@@ -1322,20 +1323,22 @@ export function adminDraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
   ctx.scale(dpr, dpr);
-  const [a, b, c, d, e, f] = getScreenTransformMatrix(canvas.clientWidth, canvas.clientHeight);
-  ctx.transform(a, b, c, d, e, f);
 
   if (window.adminBackgroundImage && window.adminBackgroundImage.complete) {
     ctx.drawImage(window.adminBackgroundImage, window.adminBackgroundImage._x || 0, window.adminBackgroundImage._y || 0);
   }
 
+  const getScreenPt = (wx, wy, wz) => {
+    const v = new THREE.Vector3(wx, -wy, wz).project(threeCamera);
+    return {
+      x: (v.x * 0.5 + 0.5) * canvas.clientWidth,
+      y: (-(v.y * 0.5) + 0.5) * canvas.clientHeight
+    };
+  };
+
   const objects = window.init?.objects || [];
   objects.forEach(obj => {
     ctx.save();
-    ctx.translate(obj.x, obj.y);
-    if (obj.rotation) {
-      ctx.rotate(obj.rotation * Math.PI / 180);
-    }
 
     if (window.selectedObject.get() && window.selectedObject.get().id === obj.id) {
       ctx.fillStyle = 'rgba(128, 0, 128, 0.5)';
@@ -1349,12 +1352,32 @@ export function adminDraw() {
       ctx.fillStyle = 'rgba(0, 191, 255, 0.6)'; // Deep Sky Blue 
     }
 
+    const angle = (obj.rotation || 0) * Math.PI / 180;
+    const cw = Math.cos(angle);
+    const sw = Math.sin(angle);
+    const hw = obj.width / 2;
+    const hl = obj.length / 2;
+    const zElev = obj.z || 0;
+
     ctx.beginPath();
     if (obj.shape === 'circle') {
       const radius = Math.max(obj.width, obj.length) / 2;
-      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      const cPt = getScreenPt(obj.x, obj.y, zElev);
+      const rPt = getScreenPt(obj.x + radius, obj.y, zElev);
+      const sRadius = Math.hypot(rPt.x - cPt.x, rPt.y - cPt.y);
+      ctx.arc(cPt.x, cPt.y, sRadius, 0, Math.PI * 2);
     } else {
-      ctx.rect(-obj.width / 2, -obj.length / 2, obj.width, obj.length);
+      const pts = [
+        getScreenPt(obj.x + (-hw)*cw - (-hl)*sw, obj.y + (-hw)*sw + (-hl)*cw, zElev),
+        getScreenPt(obj.x + (hw)*cw - (-hl)*sw, obj.y + (hw)*sw + (-hl)*cw, zElev),
+        getScreenPt(obj.x + (hw)*cw - (hl)*sw, obj.y + (hw)*sw + (hl)*cw, zElev),
+        getScreenPt(obj.x + (-hw)*cw - (hl)*sw, obj.y + (-hw)*sw + (hl)*cw, zElev)
+      ];
+      ctx.moveTo(pts[0].x, pts[0].y);
+      ctx.lineTo(pts[1].x, pts[1].y);
+      ctx.lineTo(pts[2].x, pts[2].y);
+      ctx.lineTo(pts[3].x, pts[3].y);
+      ctx.closePath();
     }
     ctx.fill();
 
@@ -1362,19 +1385,22 @@ export function adminDraw() {
       let handleX = 0, handleY = 0;
       if (obj.shape === 'circle') {
         const radius = Math.max(obj.width, obj.length) / 2;
-        handleX = radius * 0.707;
-        handleY = radius * 0.707;
+        handleX = obj.x + radius * 0.707;
+        handleY = obj.y + radius * 0.707;
       } else {
-        handleX = obj.width / 2;
-        handleY = obj.length / 2;
+        // Unrotated width/2, length/2 transformed back to world space
+        handleX = obj.x + (hw)*cw - (hl)*sw;
+        handleY = obj.y + (hw)*sw + (hl)*cw;
       }
+      
+      const hPt = getScreenPt(handleX, handleY, zElev);
 
       ctx.fillStyle = 'white';
       ctx.strokeStyle = 'black';
-      ctx.lineWidth = 2 / camera.zoom;
+      ctx.lineWidth = 2; // Flat 2 pixels screen size
       ctx.beginPath();
-      const s = 10 / camera.zoom;
-      ctx.rect(handleX - s / 2, handleY - s / 2, s, s);
+      const s = 10;
+      ctx.rect(hPt.x - s / 2, hPt.y - s / 2, s, s);
       ctx.fill();
       ctx.stroke();
     }
@@ -1386,11 +1412,16 @@ export function adminDraw() {
   npcs.forEach(npc => {
     if (window.selectedNpc.get() && window.selectedNpc.get().id === npc.id) {
       ctx.save();
-      ctx.translate(npc.x, npc.y);
+      const nz = npc.z || 0;
+      const cPt = getScreenPt(npc.x, npc.y, nz);
+
+      // Scale calculations for perspective map limits
+      const rPtHit = getScreenPt(npc.x + ((Math.max(npc.width, npc.height) / 2 || 20) + 5), npc.y, nz);
+      const hitRadius = Math.hypot(rPtHit.x - cPt.x, rPtHit.y - cPt.y);
 
       // Hitbox
       ctx.beginPath();
-      ctx.arc(0, 0, (Math.max(npc.width, npc.height) / 2 || 20) + 5, 0, Math.PI * 2);
+      ctx.arc(cPt.x, cPt.y, hitRadius, 0, Math.PI * 2);
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'cyan';
       ctx.setLineDash([]); // Ensure no dashes for hitbox
@@ -1398,12 +1429,15 @@ export function adminDraw() {
 
       // Roam Radius Visualizer
       if (npc.roam_radius !== undefined && typeof npc.roam_radius === 'number' && npc.roam_radius > 0) {
-        const startXDist = getCharacterProxy(npc.id)._startX !== undefined ? getCharacterProxy(npc.id)._startX - npc.x : 0;
-        const startYDist = getCharacterProxy(npc.id)._startY !== undefined ? getCharacterProxy(npc.id)._startY - npc.y : 0;
+        const startX = getCharacterProxy(npc.id)._startX !== undefined ? getCharacterProxy(npc.id)._startX : npc.x;
+        const startY = getCharacterProxy(npc.id)._startY !== undefined ? getCharacterProxy(npc.id)._startY : npc.y;
+        
+        const roamCPt = getScreenPt(startX, startY, nz);
+        const roamRPt = getScreenPt(startX + npc.roam_radius, startY, nz);
+        const roamS = Math.hypot(roamRPt.x - roamCPt.x, roamRPt.y - roamCPt.y);
 
         ctx.beginPath();
-        // Shift drawing center back to the anchor point the NPC is roaming around
-        ctx.arc(startXDist, startYDist, npc.roam_radius, 0, Math.PI * 2);
+        ctx.arc(roamCPt.x, roamCPt.y, roamS, 0, Math.PI * 2);
         ctx.lineWidth = 2;
         ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
         ctx.setLineDash([10, 10]);
@@ -1413,8 +1447,10 @@ export function adminDraw() {
 
       // Interaction Radius
       const r = npc.interaction_radius !== undefined ? npc.interaction_radius : 150;
+      const rPt = getScreenPt(npc.x + r, npc.y, nz);
+      const interactS = Math.hypot(rPt.x - cPt.x, rPt.y - cPt.y);
       ctx.beginPath();
-      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.arc(cPt.x, cPt.y, interactS, 0, Math.PI * 2);
       ctx.lineWidth = 1;
       ctx.strokeStyle = 'rgba(0, 0, 255, 0.8)';
       ctx.setLineDash([5, 5]);
