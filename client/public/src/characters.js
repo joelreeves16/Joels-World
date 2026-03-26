@@ -248,6 +248,7 @@ function applyShoeModel(rig, mats, c) {
         child.material = child.material.clone();
         // Override raw GLTF diffuse relying exclusively on character's cosmetic config!
         child.material.color.set(mats.shoe.color);
+        injectClipMask(child.material, c.id);
       }
     });
   };
@@ -345,6 +346,74 @@ export function clearCharacterProxy(id) {
   const isPlayer = id === 0 || (typeof id === 'string' && id.startsWith('player')) || (typeof id === 'string' && id.length > 10);
   const key = (isPlayer ? 'char_' : 'npc_') + id;
   delete characterVisuals[key];
+}
+
+export function injectClipMask(material, charId) {
+  material.onBeforeCompile = (shader) => {
+    material.userData.shader = shader;
+    shader.uniforms.clipMap = { value: physicsEngine.clipMaskTexture || null };
+    shader.uniforms.mapW = { value: physicsEngine.mapW || 0 };
+    shader.uniforms.mapH = { value: physicsEngine.mapH || 0 };
+    shader.uniforms.worldPivot = { value: new THREE.Vector2(0, 0) };
+
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <worldpos_vertex>',
+      `#include <worldpos_vertex>
+       vWorldPositionObj = worldPosition;`
+    ).replace(
+      'varying vec3 vViewPosition;',
+      `varying vec3 vViewPosition;
+       varying vec4 vWorldPositionObj;`
+    );
+
+    shader.fragmentShader = shader.fragmentShader.replace(
+      'varying vec3 vViewPosition;',
+      `varying vec3 vViewPosition;
+       varying vec4 vWorldPositionObj;
+       uniform sampler2D clipMap;
+       uniform float mapW;
+       uniform float mapH;
+       uniform vec2 worldPivot;`
+    ).replace(
+      '#include <alphatest_fragment>',
+      `#include <alphatest_fragment>
+       if (mapW > 0.0 && mapH > 0.0) {
+           vec2 fragPos = vWorldPositionObj.xy;
+           vec2 dir = worldPivot - fragPos;
+           float dist = length(dir);
+           vec2 dirNorm = dist > 0.001 ? dir / dist : vec2(0.0);
+           
+           const int MAX_STEPS = 10;
+           bool occluded = false;
+           
+           for (int i = 0; i <= MAX_STEPS; i++) {
+               float t = float(i) / float(MAX_STEPS);
+               vec2 testWorld = fragPos + dirNorm * (dist * t);
+               
+               vec2 clipUv = vec2(
+                   (testWorld.x + mapW * 0.5) / mapW,
+                   (-testWorld.y + mapH * 0.5) / mapH
+               );
+               
+               if (clipUv.x >= 0.0 && clipUv.x <= 1.0 && clipUv.y >= 0.0 && clipUv.y <= 1.0) {
+                   vec4 clipColor = texture2D(clipMap, clipUv);
+                   if (clipColor.r < 0.5 && clipColor.g < 0.5) {
+                       occluded = true;
+                       break;
+                   }
+               }
+           }
+           
+           if (occluded) {
+               discard;
+           }
+       }`
+    );
+  };
+
+  const proxy = getCharacterProxy(charId);
+  if (!proxy.clipMaterials) proxy.clipMaterials = [];
+  proxy.clipMaterials.push(material);
 }
 
 export class CharacterManager {
@@ -677,6 +746,8 @@ export class CharacterManager {
   }
 
   buildSkeletonMaterials(c) {
+    const proxy = getCharacterProxy(c.id);
+    proxy.clipMaterials = [];
     if (!c) return;
 
     const randomColor = HAIR_COLORS[getConsistentRandom(c.id + '_color', HAIR_COLORS.length)];
@@ -696,6 +767,8 @@ export class CharacterManager {
       eye_black: new THREE.MeshStandardMaterial({ color: '#000000', roughness: 0.5, metalness: 0.0 }),
       hair: new THREE.MeshStandardMaterial({ color: finalHairColor, roughness: 0.5, metalness: 0.1 })
     };
+
+    Object.values(mats).forEach(m => injectClipMask(m, c.id));
 
     return mats;
   }
@@ -829,6 +902,8 @@ export class CharacterManager {
 
     const shadowTex = new THREE.CanvasTexture(shadowCanvas);
     const shadowMat = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false });
+    injectClipMask(shadowMat, c.id);
+
     vis.shadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(shadowSize, shadowSize), shadowMat);
     vis.shadowMesh.position.set(0, 0, 0.5);
     vis.shadowMesh.renderOrder = 55;
@@ -1133,6 +1208,21 @@ export class CharacterManager {
       // Update position (WebGL Y is UP, so we negate game Y)
       const renderZ = (c.z !== undefined) ? c.z : 0;
       vis.meshGroup.position.set(c.x, -c.y, renderZ);
+
+      if (vis.clipMaterials) {
+        vis.clipMaterials.forEach(m => {
+          if (m.userData.shader) {
+            if (m.userData.shader.uniforms.worldPivot) {
+              m.userData.shader.uniforms.worldPivot.value.set(c.x, -c.y);
+            }
+            if (m.userData.shader.uniforms.clipMap) {
+              m.userData.shader.uniforms.clipMap.value = physicsEngine.clipMaskTexture || null;
+              m.userData.shader.uniforms.mapW.value = physicsEngine.mapW || 0;
+              m.userData.shader.uniforms.mapH.value = physicsEngine.mapH || 0;
+            }
+          }
+        });
+      }
 
       // Completely rip out the animation cull boundary allowing infinite evaluation mapping Native idle breathing.
       this.updateCharacter3D(c, isNpc, player, syncPlayerToJSON);

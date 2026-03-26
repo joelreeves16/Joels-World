@@ -124,5 +124,18 @@
     "clip": 50,
     "name": "Exit",
     "on_enter": 10
+  },
+  {
+    "id": 18,
+    "shape": "3d_model",
+    "x": -2793,
+    "y": -1539,
+    "width": 134,
+    "length": 161,
+    "z": 0,
+    "model": "main_building/walls.glb",
+    "scale": 1,
+    "name": "Walls",
+    "static": true
   }
 ]

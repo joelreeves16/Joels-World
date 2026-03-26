@@ -25,6 +25,7 @@ const btnSaveNpcDialog = document.getElementById('btn-save-npc-dialog');
 const npcOnEnterInput = document.getElementById('npc-on-enter-input');
 const npcOnExitInput = document.getElementById('npc-on-exit-input');
 const editObjSection = document.getElementById('edit-obj-section');
+const editObjHandle = document.getElementById('edit-obj-handle');
 const editNpcSection = document.getElementById('edit-npc-section');
 const idDisplay = document.getElementById('obj-id-display');
 const clipInputDisplay = document.getElementById('input-obj-clip');
@@ -243,8 +244,11 @@ let isDraggingObject = false;
 let isResizingObject = false;
 let isDraggingNpc = false;
 let isDraggingAdminPanel = false;
+let isDraggingEditObjPanel = false;
 let adminPanelOffsetX = 0;
 let adminPanelOffsetY = 0;
+let editObjPanelOffsetX = 0;
+let editObjPanelOffsetY = 0;
 let bgDragOffsetX = 0;
 let bgDragOffsetY = 0;
 let lastMouseX = 0;
@@ -280,6 +284,20 @@ if (adminPanelHandle) {
     adminPanel.style.right = 'auto'; // Disable flex/right alignment
     adminPanel.style.left = `${rect.left}px`;
     adminPanel.style.top = `${rect.top}px`;
+  });
+}
+
+if (editObjHandle) {
+  editObjHandle.addEventListener('mousedown', (e) => {
+    isDraggingEditObjPanel = true;
+    const rect = editObjSection.getBoundingClientRect();
+    editObjPanelOffsetX = e.clientX - rect.left;
+    editObjPanelOffsetY = e.clientY - rect.top;
+
+    editObjSection.style.right = 'auto'; 
+    editObjSection.style.bottom = 'auto'; // Remove pinning
+    editObjSection.style.left = `${rect.left}px`;
+    editObjSection.style.top = `${rect.top}px`;
   });
 }
 
@@ -643,19 +661,15 @@ function updateAdminPanel() {
       if (scaleInputDisplay) scaleInputDisplay.value = window.selectedObject.get().scale !== undefined ? window.selectedObject.get().scale : 1.0;
       if (zInputDisplay) zInputDisplay.value = window.selectedObject.get().z !== undefined ? window.selectedObject.get().z : 0;
       if (modelInputDisplay) modelInputDisplay.value = window.selectedObject.get().model || '';
-    }
-
-
-    if (objWidthInput) objWidthInput.value = Math.round(window.selectedObject.get().width) || 100;
-    if (objLengthInput) objLengthInput.value = Math.round(window.selectedObject.get().length) || 100;
-
-    // To prevent the dummy "}" replacement below we duplicate the next line:
-    if (false) {
     } else {
       if (scaleInputRow) scaleInputRow.style.display = 'none';
       if (zInputRow) zInputRow.style.display = 'none';
       if (modelInputRow) modelInputRow.style.display = 'none';
     }
+
+
+    if (objWidthInput) objWidthInput.value = Math.round(window.selectedObject.get().width) || 100;
+    if (objLengthInput) objLengthInput.value = Math.round(window.selectedObject.get().length) || 100;
   } else {
     editObjSection.style.display = 'none';
   }
@@ -1007,7 +1021,7 @@ attachEventButtons();
 
 window.addEventListener('mousedown', (e) => {
   if (e.button !== 0) return; // Only left click
-  if (e.target.closest('#admin-panel')) return; // Ignore clicks on the admin panel itself
+  if (e.target.closest('#admin-panel') || e.target.closest('#edit-obj-section')) return; // Ignore clicks on the admin UI panels themselves
 
   const canvasRect = canvas.getBoundingClientRect();
   const mouseX = e.clientX - canvasRect.left;
@@ -1073,14 +1087,14 @@ window.addEventListener('mousedown', (e) => {
         }
       }
     } else {
-      if (!e.shiftKey && !e.target.closest('#admin-panel')) {
+      if (!e.shiftKey && !e.target.closest('#admin-panel') && !e.target.closest('#edit-obj-section')) {
         window.selectedObject.set(null);
         window.selectedNpc.set(null);
       }
     }
   }
 
-  if (!window.selectedObject.get() && !window.selectedNpc.get() && !e.target.closest('#admin-panel')) {
+  if (!window.selectedObject.get() && !window.selectedNpc.get() && !e.target.closest('#admin-panel') && !e.target.closest('#edit-obj-section')) {
     if (e.shiftKey && window.adminBackgroundImage) {
       isDraggingAdminImage = true;
       bgDragOffsetX = (window.adminBackgroundImage._x || 0) - worldX;
@@ -1090,8 +1104,8 @@ window.addEventListener('mousedown', (e) => {
     }
   }
 
-  // Only update panel if we didn't click on the panel itself
-  if (!e.target.closest('#admin-panel')) {
+  // Only update panel if we didn't click on the panels themselves
+  if (!e.target.closest('#admin-panel') && !e.target.closest('#edit-obj-section')) {
     updateAdminPanel();
   }
 });
@@ -1100,6 +1114,12 @@ window.addEventListener('mousemove', (e) => {
   if (isDraggingAdminPanel) {
     adminPanel.style.left = `${e.clientX - adminPanelOffsetX}px`;
     adminPanel.style.top = `${e.clientY - adminPanelOffsetY}px`;
+    return;
+  }
+
+  if (isDraggingEditObjPanel) {
+    editObjSection.style.left = `${e.clientX - editObjPanelOffsetX}px`;
+    editObjSection.style.top = `${e.clientY - editObjPanelOffsetY}px`;
     return;
   }
 
@@ -1204,6 +1224,7 @@ window.addEventListener('mouseup', () => {
   isDraggingBackground = false;
   isDraggingAdminImage = false;
   isDraggingAdminPanel = false;
+  isDraggingEditObjPanel = false;
 });
 
 window.addEventListener('wheel', (e) => {
