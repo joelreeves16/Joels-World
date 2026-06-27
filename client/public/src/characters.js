@@ -78,43 +78,30 @@ export function getConsistentRandom(idStr, max) {
 export function loadSharedModels() {
   const loader = new GLTFLoader();
   loader.load('./models/slip_on_shoes.glb', (gltf) => {
-    // Attempt to load explicit left/right shoe instances, otherwise gracefully clone the primary mesh
-    const baseR = gltf.scene.getObjectByName('shoes_r') || gltf.scene.children[0];
-    const baseL = gltf.scene.getObjectByName('shoes_l') || (baseR ? baseR.clone() : null);
+    // The model contains a single shoe; clone the entire scene to preserve the Blender origin and correct rotation
+    const prepShoe = () => {
+      const node = gltf.scene.clone();
+      node.scale.setScalar(0.65);
 
-    const prepShoe = (node) => {
-      if (!node) return null;
-      node.removeFromParent();
-      node.scale.setScalar(60);
+      // Rotate from ThreeJS Y-up into the Game's X-forward/Z-up coordinate system
+      // This pitches the shoe down to lay flat and yaws it to point forward along the X axis
+      node.rotation.set(0, Math.PI / 2, Math.PI / 2);
+
       node.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
-          if (child.material) child.material.color.setHex(0xffffff);
+          if (child.material) {
+            child.material = child.material.clone();
+            child.material.color.setHex(0xffffff);
+          }
         }
       });
       return node;
     };
 
-    const wrapperL = new THREE.Group();
-    const nodeL = prepShoe(baseL);
-    if (nodeL) wrapperL.add(nodeL);
-
-    const wrapperR = new THREE.Group();
-    const nodeR = prepShoe(baseR);
-    // Explicitly do not share identical material references if cloned
-    if (nodeR && baseL === baseR) {
-      const clonedR = baseR.clone();
-      clonedR.traverse((child) => {
-        if (child.isMesh && child.material) child.material = child.material.clone();
-      });
-      wrapperR.add(clonedR);
-    } else if (nodeR) {
-      wrapperR.add(nodeR);
-    }
-
-    sharedShoeMeshL = wrapperL;
-    sharedShoeMeshR = wrapperR;
+    sharedShoeMeshL = prepShoe();
+    sharedShoeMeshR = prepShoe();
 
     console.log("Cached Slip-on shoes locally!");
 
@@ -361,14 +348,14 @@ export function injectClipMask(material, charId) {
       `#include <worldpos_vertex>
        vWorldPositionObj = worldPosition;`
     ).replace(
-      'varying vec3 vViewPosition;',
-      `varying vec3 vViewPosition;
+      '#include <common>',
+      `#include <common>
        varying vec4 vWorldPositionObj;`
     );
 
     shader.fragmentShader = shader.fragmentShader.replace(
-      'varying vec3 vViewPosition;',
-      `varying vec3 vViewPosition;
+      '#include <common>',
+      `#include <common>
        varying vec4 vWorldPositionObj;
        uniform sampler2D clipMap;
        uniform float mapW;

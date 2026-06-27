@@ -28,6 +28,7 @@ physicsEngine.onClipMaskLoaded = (canvas) => {
   physicsEngine.clipMaskTexture.generateMipmaps = false;
   physicsEngine.clipMaskTexture.flipY = false;
 };
+
 // Trigger native GLTF parsing routines immediately on script load!
 loadSharedModels();
 
@@ -43,7 +44,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 export const scene = new THREE.Scene();
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 2.0); // Brighter ambient floor for softer/lighter shadows
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); // Brighter ambient floor for softer/lighter shadows
 scene.add(ambientLight);
 
 const dirLight = new THREE.SpotLight(0xffffff, 2.0); // Commensurately lowered direct lighting

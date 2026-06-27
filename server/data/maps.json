@@ -9,11 +9,11 @@
         "z": 0,
         "alpha": 1,
         "chunked": true,
-        "source_image": "/junior_school/new_map_5.png",
+        "source_image": "/junior_school/background.jpg",
         "chunk_size": 512,
         "grid_w": 9,
         "grid_h": 8,
-        "path_template": "/junior_school/chunks/new_map_5_{x}_{y}.png"
+        "path_template": "/junior_school/chunks/background_{x}_{y}.jpg"
       }
     ],
     "clip_mask": "junior_school/clip_mask.svg",

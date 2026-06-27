@@ -49,7 +49,8 @@
     "shirt_color": "#1c2833",
     "pants_color": "#2c3e50",
     "arm_color": "#1c2833",
-    "shoe_color": "#7f8c8d"
+    "shoe_color": "#7f8c8d",
+    "z": 0
   },
   {
     "id": 2,
@@ -77,7 +78,8 @@
     "shirt_color": "#e74c3c",
     "pants_color": "#2c3e50",
     "arm_color": "#e74c3c",
-    "shoe_color": "#5e3a1f"
+    "shoe_color": "#5e3a1f",
+    "z": 0
   },
   {
     "id": 3,
@@ -104,7 +106,8 @@
     "shirt_color": "#2ecc71",
     "pants_color": "#2c3e50",
     "arm_color": "#2ecc71",
-    "shoe_color": "#111111"
+    "shoe_color": "#111111",
+    "z": 0
   },
   {
     "id": 4,
@@ -131,7 +134,8 @@
     "shirt_color": "#2ecc71",
     "pants_color": "#2c3e50",
     "arm_color": "#e67e22",
-    "shoe_color": "#5e3a1f"
+    "shoe_color": "#5e3a1f",
+    "z": 0
   },
   {
     "id": 5,
@@ -158,7 +162,8 @@
     "shirt_color": "#9b59b6",
     "pants_color": "#2c3e50",
     "arm_color": "#9b59b6",
-    "shoe_color": "#111111"
+    "shoe_color": "#111111",
+    "z": 0
   },
   {
     "id": 7,
@@ -184,7 +189,8 @@
     "shirt_color": "#ffffff",
     "pants_color": "#ffffff",
     "arm_color": "#ffffff",
-    "shoe_color": "#111111"
+    "shoe_color": "#111111",
+    "z": 0
   },
   {
     "id": 8,
@@ -238,15 +244,16 @@
     "shirt_color": "#bdc3c7",
     "pants_color": "#34495e",
     "arm_color": "#bdc3c7",
-    "shoe_color": "#111111"
+    "shoe_color": "#111111",
+    "z": 0
   },
   {
     "id": 9,
     "name": "Mr Ferguson",
     "x": 1509,
     "y": -180,
-    "width": 40,
-    "height": 40,
+    "width": 50,
+    "height": 50,
     "rotation": 110,
     "agent": {
       "prompt_file": "junior_school/agent_mr_ferguson.md",
@@ -270,10 +277,12 @@
     "on_exit": [],
     "interaction_radius": 800,
     "gender": "male",
-    "hair_color": "#000000",
+    "hair_color": "brown",
     "shirt_color": "#3498db",
     "pants_color": "#2c3e50",
-    "arm_color": "#3498db"
+    "arm_color": "#3498db",
+    "z": 0,
+    "head": "male_hair_short_2"
   },
   {
     "id": 10,
@@ -299,7 +308,8 @@
     "shirt_color": "#e67e22",
     "pants_color": "#2c3e50",
     "arm_color": "#e67e22",
-    "shoe_color": "#5e3a1f"
+    "shoe_color": "#5e3a1f",
+    "z": 0
   },
   {
     "id": 11,
@@ -324,7 +334,8 @@
     "hair_color": "#000000",
     "shirt_color": "#3498db",
     "pants_color": "#2c3e50",
-    "arm_color": "#3498db"
+    "arm_color": "#3498db",
+    "z": 0
   },
   {
     "id": 12,
@@ -348,7 +359,8 @@
     "hair_color": "brown",
     "shirt_color": "#ff6251",
     "pants_color": "#2c3e50",
-    "arm_color": "#669c35"
+    "arm_color": "#669c35",
+    "z": 0
   },
   {
     "id": 13,
@@ -372,7 +384,8 @@
     "hair_color": "blonde",
     "shirt_color": "#3498db",
     "pants_color": "#2c3e50",
-    "arm_color": "#3498db"
+    "arm_color": "#3498db",
+    "z": 0
   },
   {
     "id": 14,
@@ -400,7 +413,8 @@
       }
     ],
     "gender": "male",
-    "head": "male_hair_bald"
+    "head": "male_hair_bald",
+    "z": 0
   },
   {
     "id": 15,
@@ -426,7 +440,8 @@
     "head": "male_hair_messy",
     "shirt_color": "#e74c3c",
     "pants_color": "#2c3e50",
-    "arm_color": "#e74c3c"
+    "arm_color": "#e74c3c",
+    "z": 0
   },
   {
     "id": 16,
@@ -453,7 +468,8 @@
     "hair_color": "blonde",
     "shirt_color": "#e74c3c",
     "pants_color": "#2c3e50",
-    "arm_color": "#e74c3c"
+    "arm_color": "#e74c3c",
+    "z": 0
   },
   {
     "id": 17,
@@ -479,7 +495,8 @@
     "head": "male_hair_messy",
     "shirt_color": "#2ecc71",
     "pants_color": "#2c3e50",
-    "arm_color": "#2ecc71"
+    "arm_color": "#2ecc71",
+    "z": 0
   },
   {
     "id": 18,
@@ -505,7 +522,8 @@
     "head": "female_hair_ponytail",
     "shirt_color": "#9b59b6",
     "pants_color": "#2c3e50",
-    "arm_color": "#9b59b6"
+    "arm_color": "#9b59b6",
+    "z": 0
   },
   {
     "id": 19,
@@ -540,7 +558,8 @@
     "hair_color": "#aa7942",
     "shirt_color": "#fff2d5",
     "pants_color": "#95a5a6",
-    "arm_color": "#ffe2d6"
+    "arm_color": "#ffe2d6",
+    "z": 0
   },
   {
     "id": 20,
@@ -567,7 +586,8 @@
     "head": "male_hair_short",
     "shirt_color": "#bdc3c7",
     "pants_color": "#95a5a6",
-    "arm_color": "#bdc3c7"
+    "arm_color": "#bdc3c7",
+    "z": 0
   },
   {
     "id": 21,
@@ -598,7 +618,8 @@
     "head": "male_hair_messy",
     "shirt_color": "#bdc3c7",
     "pants_color": "#95a5a6",
-    "arm_color": "#bdc3c7"
+    "arm_color": "#bdc3c7",
+    "z": 0
   },
   {
     "id": 23,
@@ -627,7 +648,8 @@
     "hair_color": "#4d4028",
     "shirt_color": "#aaaaaa",
     "pants_color": "#95a5a6",
-    "arm_color": "#bdc3c7"
+    "arm_color": "#bdc3c7",
+    "z": 0
   },
   {
     "id": 24,
@@ -658,7 +680,8 @@
     "hair_color": "#ca9c1b",
     "shirt_color": "#4f7a28",
     "pants_color": "#95a5a6",
-    "arm_color": "#4f7a28"
+    "arm_color": "#4f7a28",
+    "z": 0
   },
   {
     "id": 25,
@@ -687,7 +710,8 @@
     "hair_color": "#4f3920",
     "shirt_color": "#263e0f",
     "pants_color": "#001e57",
-    "arm_color": "#4f5503"
+    "arm_color": "#4f5503",
+    "z": 0
   },
   {
     "id": 26,
@@ -708,6 +732,7 @@
     ],
     "shirt_color": "#3498db",
     "pants_color": "#2c3e50",
-    "arm_color": "#3498db"
+    "arm_color": "#3498db",
+    "z": 0
   }
 ]
